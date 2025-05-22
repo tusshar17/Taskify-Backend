@@ -1,5 +1,5 @@
 from flask import jsonify
-from app.models import User, Task
+from app.models import User, Task, Project
 from app import db
 import pandas as pd
 
@@ -80,24 +80,45 @@ def process_excel_data(file, project_id):
                 due_date = row["due_date"]
                 users = row.get("users")
 
+                # associate project with task if exists, else create one then associate it
+                project_name = row.get("project")
+                project = Project.query.filter(
+                    Project.name.ilike(f"%{project_name}%")
+                ).first()
+                project_to_associate = project
+                if not project:
+                    new_project = Project(name=project_name)
+                    db.session.add(new_project)
+                    db.session.commit()
+                    db.session.refresh(new_project)
+                    project_to_associate(new_project)
+
                 task = Task(
                     name=name,
                     description=description,
                     status=status,
                     due_date=due_date,
-                    project_id=project_id,
+                    project_id=project_to_associate.id,
                 )
-                # TODO
+
                 if users:
-                    print(users)
-                    users_queryset = User.query.filter(User.name.in_(users)).all()
-                    task.users.extend(users_queryset)
+                    for user in users.split(","):
+                        users_to_associate = User.query.filter(
+                            User.name.ilike(f"%{user}%")
+                        ).first()
+                        if not users_to_associate:
+                            new_user = User(name=user)
+                            db.session.add(new_user)
+                            db.session.commit()
+                            db.session.refresh(new_user)
+                            users_to_associate = new_user
+                        task.users.extend([users_to_associate])
+
                 db.session.add(task)
                 db.session.commit()
                 tasks_summary["created_successfully"] += 1
             except Exception as err:
                 tasks_summary["failed_to_create"] += 1
-                print(err)
 
         return tasks_summary
 

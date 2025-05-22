@@ -6,4 +6,10 @@ class Project(db.Model, TimeStampBase):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
 
-    tasks = db.relationship("Task", backref="project", lazy=True)
+    tasks = db.relationship(
+        "Task",
+        backref="project",
+        lazy=True,
+        cascade="all, delete",
+        passive_deletes=True,
+    )

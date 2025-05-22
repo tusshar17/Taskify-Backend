@@ -26,8 +26,14 @@ class Task(db.Model, TimeStampBase):
     )
     due_date = db.Column(db.DateTime, nullable=False)
 
-    project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
+    project_id = db.Column(
+        db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"), nullable=False
+    )
 
     users = db.relationship(
-        "User", secondary="user_tasks", backref=db.backref("task", lazy="dynamic")
+        "User",
+        secondary="user_tasks",
+        backref=db.backref("task", lazy="dynamic"),
+        cascade="all, delete",
+        passive_deletes=True,
     )
