@@ -34,6 +34,6 @@ class Task(db.Model, TimeStampBase):
         "User",
         secondary="user_tasks",
         backref=db.backref("task", lazy="dynamic"),
-        cascade="all, delete",
+        cascade="save-update",  # Don't delete users when task is deleted
         passive_deletes=True,
     )

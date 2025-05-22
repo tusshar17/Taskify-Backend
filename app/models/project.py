@@ -10,6 +10,6 @@ class Project(db.Model, TimeStampBase):
         "Task",
         backref="project",
         lazy=True,
-        cascade="all, delete",
+        cascade="all, delete-orphan",  # delete all task when project is deleted
         passive_deletes=True,
     )
