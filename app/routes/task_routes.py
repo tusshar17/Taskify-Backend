@@ -6,7 +6,7 @@ from app.serializers import serialize_task, serialize_task_for_export
 from app.utils.db_helpers import get_instance_or_404
 from app.utils.export_tasks import export_tasks
 from app.utils.import_tasks import validate_uploaded_file, process_excel_data
-
+from datetime import datetime
 import pandas as pd
 
 task_bp = Blueprint("task_bp", __name__)
@@ -72,8 +72,13 @@ def create_task(project_id):
     name = data.get("name")
     description = data.get("description")
     status = data.get("status", StatusEnum.NOT_STARTED)
-    due_date = data.get("due_date")
+    due_date_str = data.get("due_date")
     user_ids = data.get("user_ids", [])
+
+    try:
+        due_date = datetime.strptime(due_date_str, "%a, %d %b %Y %H:%M:%S %Z")
+    except ValueError:
+        due_date = datetime.fromisoformat(due_date_str)
 
     # required fields validation
     if not name or not due_date:
@@ -130,12 +135,27 @@ def update_task(project_id, task_id):
     task.name = data.get("name", task.name)
     task.description = data.get("description", task.description)
     task.status = data.get("status", task.status)
-    task.due_date = data.get("due_date", task.due_date)
     task.project_id = data.get("project_id", task.project_id)
 
+    if data.get("due_date"):
+        try:
+            task.due_date = datetime.strptime(
+                data.get("due_date"), "%a, %d %b %Y %H:%M:%S %Z"
+            )
+        except ValueError:
+            due_date = datetime.fromisoformat(data.get("due_date"))
+
     if data.get("user_ids"):
-        users = User.query.filter(User.id.in_(data.get("user_ids"))).all()
-        task.users.extend(users)
+        new_users = User.query.filter(User.id.in_(data.get("user_ids"))).all()
+        new_user_ids = {user.id for user in new_users}
+        existing_user_ids = {user.id for user in task.users}
+
+        # Remove users no longer in new_user_ids
+        task.users = [user for user in task.users if user.id in new_user_ids]
+
+        # Add users that are new
+        users_to_add = [user for user in new_users if user.id not in existing_user_ids]
+        task.users.extend(users_to_add)
 
     db.session.commit()
     db.session.refresh(task)
