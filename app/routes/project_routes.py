@@ -21,10 +21,10 @@ def get_projects():
         return jsonify({"error": "Invalid sort_by field"}), 400
     sort_column = getattr(Project, sort_by)
     # sorting order - descending or ascending
-    if order == "desc":
-        sort_column = sort_column.desc()
-    else:
+    if order == "asc":
         sort_column = sort_column.asc()
+    else:
+        sort_column = sort_column.desc()
 
     projects_paginated = Project.query.order_by(sort_column).paginate(
         page=page, per_page=per_page, error_out=False

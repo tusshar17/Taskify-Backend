@@ -26,10 +26,10 @@ def get_tasks(project_id):
         return jsonify({"error": "Invalid sort_by field"}), 400
     sort_column = getattr(Task, sort_by)
     # sorting order - descending or ascending
-    if order == "desc":
-        sort_column = sort_column.desc()
-    else:
+    if order == "asc":
         sort_column = sort_column.asc()
+    else:
+        sort_column = sort_column.desc()
 
     tasks_paginated = (
         Task.query.filter_by(project_id=project_id)
