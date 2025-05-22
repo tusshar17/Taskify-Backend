@@ -6,8 +6,18 @@ import enum
 
 user_task = db.Table(
     "user_tasks",
-    db.Column("user_id", db.Integer, db.ForeignKey("user.id"), primary_key=True),
-    db.Column("task_id", db.Integer, db.ForeignKey("task.id"), primary_key=True),
+    db.Column(
+        "user_id",
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    db.Column(
+        "task_id",
+        db.Integer,
+        db.ForeignKey("task.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
 )
 
 
