@@ -9,7 +9,7 @@ def serialize_task(task):
         "status": task.status.value,
         "due_date": task.due_date,
         "project": {"id": task.project_id, "name": task.project.name},
-        "user_ids": [user.id for user in task.users],
+        "users": [{"user_id": user.id, "user_name": user.name} for user in task.users],
         "created_at": task.created_at,
         "updated_at": task.updated_at,
     }
